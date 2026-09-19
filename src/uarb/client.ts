@@ -172,9 +172,14 @@ export class UarbClient {
 
   private async saveStream(stream: Readable, path: string) {
     let received = 0;
+    let header = Buffer.alloc(0);
     const limiter = new Transform({ transform: (chunk: Buffer, _, callback) => {
       received += chunk.length;
-      callback(received > this.config.MAX_FILE_BYTES ? new FilingError('FILE_SIZE', 'File exceeds the size limit') : null, chunk);
+      header = Buffer.concat([header, chunk.subarray(0, Math.max(0, 12 - header.length))]);
+      const declaredSize = header.length === 12 && header.toString('ascii', 0, 4) === 'RIFF'
+        && header.toString('ascii', 8, 12) === 'WAVE' ? header.readUInt32LE(4) + 8 : 0;
+      const tooLarge = Math.max(received, declaredSize) > this.config.MAX_FILE_BYTES;
+      callback(tooLarge ? new FilingError('FILE_SIZE', `File exceeds the ${this.config.MAX_FILE_BYTES / 1_000_000} MB attachment limit`) : null, chunk);
     } });
     await pipeline(stream, limiter, createWriteStream(path));
   }

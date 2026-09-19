@@ -57,6 +57,7 @@ export interface FilingFile extends ValidatedFile {
 
 export interface SkippedFile {
   documentId: string;
+  documentTitle?: string;
   filename?: string;
   reason: string;
 }

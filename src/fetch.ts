@@ -36,7 +36,7 @@ export async function fetchDocuments(input: FilingRequest, config: Config, direc
         if (seen.has(doc.id)) continue;
         seen.add(doc.id);
         if (doc.security && doc.security.toLowerCase() !== 'public') {
-          result.skipped.push({ documentId: doc.id, reason: 'Document is not public' });
+          result.skipped.push({ documentId: doc.id, documentTitle: doc.title, reason: 'Document is not public' });
           continue;
         }
         let hit: FilingFile[] | null = null;
@@ -49,7 +49,7 @@ export async function fetchDocuments(input: FilingRequest, config: Config, direc
           try { attachments = await client.openAttachments(doc); }
           catch {
             if (client.timedOut) throw new FilingError('JOB_TIMEOUT', 'Retrieval exceeded its time limit');
-            result.skipped.push({ documentId: doc.id, reason: 'Could not open the attachment dialog' });
+            result.skipped.push({ documentId: doc.id, documentTitle: doc.title, reason: 'Could not open the attachment dialog' });
             await client.closeAttachments();
             continue;
           }
@@ -74,7 +74,7 @@ export async function fetchDocuments(input: FilingRequest, config: Config, direc
                 }
               }
               if (file) { downloaded.push(file); accept(file); }
-              else { complete = false; result.skipped.push({ documentId: doc.id, filename, reason }); }
+              else { complete = false; result.skipped.push({ documentId: doc.id, documentTitle: doc.title, filename, reason }); }
             }
           } finally { await client.closeAttachments(); }
           if (complete) {
@@ -93,7 +93,7 @@ export async function fetchDocuments(input: FilingRequest, config: Config, direc
   } catch (error) {
     await client.screenshot();
     if (client.timedOut && result) {
-      result.warnings.push('Retrieval reached its time limit; some documents could not be checked. Please try a smaller request or download remaining files from UARB.');
+      result.warnings.push('Retrieval reached its time limit; some documents could not be checked. You can access the remaining files on UARB.');
       return result;
     }
     if (client.timedOut) throw new FilingError('JOB_TIMEOUT', 'Retrieval exceeded its time limit');

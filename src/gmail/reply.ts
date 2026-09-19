@@ -36,7 +36,7 @@ export function clarification(issues: string[]): ReplyContent {
 
 export function formatReply(result: FetchResult): ReplyContent {
   const { matter, request, files } = result;
-  const title = `${matter.number}: ${matter.title.replace(/\s+/g, ' ').trim()}`;
+  const title = `${matter.number}: ${[...new Set(matter.title.split(/\r?\n/).map(line => line.trim()).filter(Boolean))].join(' ')}`;
   const details = [
     `Status: ${matter.status ?? 'Not listed'}`,
     `Category: ${matter.category ?? 'Not listed'}`,
@@ -51,7 +51,7 @@ export function formatReply(result: FetchResult): ReplyContent {
   const attached = `${files.length} ${request.documentType} ${files.length === 1 ? 'file' : 'files'}`;
   const attachment = files.length ? `Attached is a ZIP containing ${attached}.` : 'No ZIP is attached because no eligible files were downloaded.';
   const notes = [
-    ...result.skipped.slice(0, 20).map(file => `Skipped ${file.documentId}: ${file.reason}`),
+    ...result.skipped.slice(0, 20).map(file => `Skipped ${file.filename ?? file.documentTitle ?? request.documentType}: ${file.reason}`),
     ...result.warnings,
   ];
   const footer = [
