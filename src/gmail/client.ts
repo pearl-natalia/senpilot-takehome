@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { OAuth2Client } from 'google-auth-library';
 import { simpleParser } from 'mailparser';
 import MailComposer from 'nodemailer/lib/mail-composer/index.js';
+import type { ReplyContent } from './reply.js';
 
 export interface IncomingEmail {
   id: string;
@@ -75,11 +76,11 @@ export class GmailClient {
     };
   }
 
-  async composeReply(email: IncomingEmail, text: string, messageId: string, attachment?: string) {
+  async composeReply(email: IncomingEmail, text: string | ReplyContent, messageId: string, attachment?: string) {
     const raw = await new MailComposer({
       from: this.mailbox, to: email.from,
       subject: /^re:/i.test(email.subject) ? email.subject : `Re: ${email.subject}`,
-      text, messageId, inReplyTo: email.messageId,
+      ...(typeof text === 'string' ? { text } : text), messageId, inReplyTo: email.messageId,
       references: [...email.references, ...(email.messageId ? [email.messageId] : [])],
       headers: { 'Auto-Submitted': 'auto-replied', 'X-Auto-Response-Suppress': 'All', 'X-Filing-Agent': 'senpilot-takehome', 'X-Filing-Job': messageId },
       attachments: attachment ? [{ path: attachment, contentType: 'application/zip' }] : [],

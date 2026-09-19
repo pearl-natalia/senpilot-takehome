@@ -11,7 +11,7 @@ import { fetchDocuments } from './fetch.js';
 import { createArchive } from './files/zip.js';
 import { GmailClient, GmailError, type IncomingEmail } from './gmail/client.js';
 import { extractRequest } from './gmail/extract.js';
-import { clarification, formatReply } from './gmail/reply.js';
+import { clarification, formatReply, type ReplyContent } from './gmail/reply.js';
 
 interface Job {
   id: string;
@@ -97,7 +97,7 @@ export class JobRunner {
       }
       await update("status = 'extracting', incoming = $3", [incoming]);
       let request: FilingRequest | null = job.request ? requestSchema.parse(job.request) : null;
-      let text = '';
+      let text: string | ReplyContent = '';
       let attachment: string | undefined;
       let terminal = 'completed';
       if (job.attempts > 3) {
