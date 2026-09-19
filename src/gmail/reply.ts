@@ -1,6 +1,12 @@
 import { DOCUMENT_TYPES, type FetchResult } from '../domain.js';
 
-export const clarification = 'Please send one matter number and one document type per email.\n\nFor example: Please send the Other Documents for M12205.\n\nSupported types: Exhibits, Key Documents, Other Documents, Transcripts, Recordings. I can return up to 10 files per request.';
+export function clarification(issues: string[]) {
+  return ['I need a little more information before I can retrieve your documents:', '',
+    ...issues.map(issue => `- ${issue}`), '',
+    'For example: Please send the Other Documents for M12205.', '',
+    'Reply with your complete request. I can return up to 10 files per request.',
+  ].join('\n');
+}
 
 export function formatReply(result: FetchResult) {
   const { matter, request, files } = result;
