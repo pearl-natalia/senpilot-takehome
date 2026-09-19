@@ -1,0 +1,7 @@
+.git/
+.gitignore
+#!include:.gitignore
+test/
+secrets/
+.env
+.env.*
