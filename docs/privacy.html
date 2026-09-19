@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy — UARB Email Agent</title>
+<style>body{font:18px/1.6 system-ui,sans-serif;max-width:720px;margin:64px auto;padding:0 24px;color:#202a35}a{color:#1756a9}</style>
+<h1>Privacy policy</h1>
+<p>This page describes Pearl Natalia’s Senpilot Takehome demonstration, operated through pearl.senpilot.agent@gmail.com.</p>
+<h2>Information used</h2>
+<p>The app reads incoming messages in its dedicated Gmail mailbox and sends replies. It uses the sender address, subject, message text, and message identifiers to understand a document request, process it once, and reply in the same email thread. It does not ask requesters to grant access to their own mailboxes.</p>
+<h2>Processing and storage</h2>
+<p>The subject and request text, with quoted history removed where recognized, are sent to OpenAI’s API to extract a matter number and document type. OpenAI API processing is configured with response storage disabled; this does not eliminate any provider retention applicable to the account. Google Cloud hosts the agent, credentials, and cached public documents. Neon Postgres stores job information, including sender details and request text, to support retries and prevent duplicate replies. Pearl can access the mailbox and operational records to troubleshoot the demo.</p>
+<p>Completed, failed, and clarification jobs are scheduled for deletion from the application database after 30 days. Requests with unresolved delivery status can remain until investigated. Cached document bytes are scheduled for deletion after two days and reused for no more than 24 hours. Source emails and sent replies remain in Gmail until the mailbox owner deletes them. Service providers may retain backups and operational logs according to their own policies.</p>
+<h2>Use and sharing</h2>
+<p>Information is used to retrieve public UARB documents, reply to the sender, and operate or troubleshoot this demo. It is shared with the service providers described above for those purposes. It is not sold, used for advertising, or used by this app to train AI models.</p>
+<p>The app’s use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including its Limited Use requirements.</p>
+<h2>Contact and deletion</h2>
+<p>For privacy questions or deletion requests, contact Pearl at <a href="mailto:pearlnnatalia@gmail.com">pearlnnatalia@gmail.com</a>. The mailbox owner can revoke the app’s Google access through Google Account settings. Please do not include confidential or sensitive personal information in document requests.</p>
+<p><a href="index.html">Back to the agent homepage</a></p>
+</html>
