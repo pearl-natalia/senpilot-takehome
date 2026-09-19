@@ -63,6 +63,7 @@ export class GmailClient {
     const from = parsed.from?.value;
     if (from?.length !== 1 || !from[0]?.address || canonicalEmail(from[0].address) === canonicalEmail(this.mailbox)) return null;
     if (/[^\x21-\x7e]/.test(from[0].address) || !/^[^<>\s]+@[^<>\s]+\.[^<>\s]+$/.test(from[0].address)) return null;
+    if (/^(?:no[._-]?reply|do[._-]?not[._-]?reply|mailer[._-]?daemon|postmaster)(?:[+._-][^@]*)?@/i.test(from[0].address)) return null;
     const autoSubmitted = parsed.headers.get('auto-submitted');
     if ((autoSubmitted && String(autoSubmitted).toLowerCase() !== 'no') || parsed.headers.has('list-id') || parsed.headers.has('x-filing-agent')) return null;
     if (/bulk|list|junk/i.test(String(parsed.headers.get('precedence') ?? ''))) return null;
