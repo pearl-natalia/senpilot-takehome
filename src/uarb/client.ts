@@ -140,8 +140,13 @@ export class UarbClient {
     let reject!: (error: Error) => void;
     const event = new Promise<Source>((yes, no) => { resolve = yes; reject = no; });
     const onDownload = (download: Download) => {
-      if (download.suggestedFilename().normalize('NFC') === filename.normalize('NFC')) resolve({ download });
-      else void download.cancel();
+      // Linux Chromium can report a UTF-8 attachment as simply "download".
+      const url = new URL(download.url());
+      if (url.origin === new URL(UARB_URL).origin && url.pathname.startsWith('/fmi/webd/APP/connector/')) resolve({ download });
+      else {
+        void download.cancel();
+        reject(new FilingError('DOWNLOAD_FAILED', 'Unexpected download location'));
+      }
     };
     const onFailure = (request: Request) => {
       if (request.failure()?.errorText.includes('ERR_RESPONSE_HEADERS_MULTIPLE_CONTENT_DISPOSITION')) resolve({ malformedHeaderUrl: request.url() });
@@ -202,10 +207,15 @@ export class UarbClient {
 
   async closeAttachments(): Promise<void> {
     const close = this.page?.getByRole('button', { name: 'Close', exact: true });
-    if (close && await close.isVisible()) await close.click();
+    if (close && await close.isVisible()) {
+      await close.click();
+      await close.waitFor({ state: 'hidden' });
+    }
     if (await this.page?.getByText('Export Field to File', { exact: true }).isVisible()) {
       await this.page!.getByRole('button', { name: 'Cancel', exact: true }).click();
+      await this.page!.getByText('Export Field to File', { exact: true }).waitFor({ state: 'hidden' });
     }
+    if (this.page && !this.page.isClosed()) await this.page.locator('.v-loading-indicator').waitFor({ state: 'hidden' });
   }
 
   async screenshot(): Promise<void> {
