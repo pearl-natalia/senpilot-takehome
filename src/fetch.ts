@@ -11,19 +11,21 @@ export async function fetchDocuments(input: FilingRequest, config: Config, direc
   const request = requestSchema.parse(input);
   await mkdir(directory, { recursive: true });
   const client = source ?? new UarbClient(config, directory, headed);
+  let result: FetchResult | undefined;
   try {
     const matter = await client.open(request);
-    const result: FetchResult = { request, matter, files: [], skipped: [], warnings: [], listingExhausted: false };
+    result = { request, matter, files: [], skipped: [], warnings: [], listingExhausted: false };
+    const retrieved = result;
     let totalBytes = 0;
     const seen = new Set<string>();
     const accept = (file: FilingFile) => {
       // Reserve room for ZIP headers within the attachment budget.
       if (totalBytes + file.size > config.MAX_TOTAL_BYTES - 4096) {
-        result.skipped.push({ documentId: file.documentId, filename: file.originalFilename, reason: 'Would exceed the total attachment size limit' });
+        retrieved.skipped.push({ documentId: file.documentId, filename: file.originalFilename, reason: 'Would exceed the total attachment size limit' });
         return false;
       }
       totalBytes += file.size;
-      result.files.push(file);
+      retrieved.files.push(file);
       return true;
     };
     if (!matter.counts[request.documentType]) { result.listingExhausted = true; return result; }
@@ -90,6 +92,10 @@ export async function fetchDocuments(input: FilingRequest, config: Config, direc
     return result;
   } catch (error) {
     await client.screenshot();
+    if (client.timedOut && result) {
+      result.warnings.push('Retrieval reached its time limit; some documents could not be checked. Please try a smaller request or download remaining files from UARB.');
+      return result;
+    }
     if (client.timedOut) throw new FilingError('JOB_TIMEOUT', 'Retrieval exceeded its time limit');
     throw error;
   } finally { await client.close(); }

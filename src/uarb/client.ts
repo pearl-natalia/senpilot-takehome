@@ -156,22 +156,13 @@ export class UarbClient {
       this.page!.off('download', onDownload);
       this.page!.off('requestfailed', onFailure);
     }
-    if ('malformedHeaderUrl' in source) return this.downloadWithMalformedHeader(source.malformedHeaderUrl, doc, attachmentIndex, filename);
+    if ('malformedHeaderUrl' in source) return this.downloadFromSource(source.malformedHeaderUrl, doc, attachmentIndex, filename);
     const { download } = source;
-    const name = safeFilename(`${doc.id}-${attachmentIndex + 1}-${download.suggestedFilename()}`);
-    const path = join(this.directory, name);
-    const abort = setTimeout(() => { void download.cancel(); }, this.config.DOWNLOAD_TIMEOUT_MS);
-    try {
-      const stream = await download.createReadStream();
-      await this.saveStream(stream, path);
-      const failure = await download.failure();
-      if (failure) throw new FilingError('DOWNLOAD_FAILED', 'The browser could not complete this download');
-      return { path, filename: name };
-    } catch (error) {
-      await download.cancel().catch(() => {});
-      await rm(path, { force: true });
-      throw error;
-    } finally { clearTimeout(abort); await download.delete().catch(() => {}); }
+    const url = download.url();
+    // Stream the observed source URL so size checks run before the whole file downloads.
+    await download.cancel();
+    try { return await this.downloadFromSource(url, doc, attachmentIndex, filename); }
+    finally { await download.delete().catch(() => {}); }
   }
 
   private async saveStream(stream: Readable, path: string) {
@@ -183,7 +174,7 @@ export class UarbClient {
     await pipeline(stream, limiter, createWriteStream(path));
   }
 
-  private async downloadWithMalformedHeader(url: string, doc: DocumentReference, index: number, originalFilename: string) {
+  private async downloadFromSource(url: string, doc: DocumentReference, index: number, originalFilename: string) {
     const target = new URL(url);
     if (target.origin !== new URL(UARB_URL).origin || !target.pathname.startsWith('/fmi/webd/APP/connector/')) {
       throw new FilingError('DOWNLOAD_FAILED', 'Unexpected download location');
