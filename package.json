@@ -1,0 +1,39 @@
+{
+  "name": "senpilot-takehome",
+  "version": "0.1.0",
+  "private": true,
+  "overrides": {
+    "gaxios": {
+      "uuid": "^11.1.1"
+    }
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck",
+    "db:migrate": "node --import tsx src/db/migrate.ts",
+    "fetch": "node --import tsx src/cli.ts",
+    "browser:install": "playwright install chromium",
+    "gmail:authorize": "node --import tsx src/gmail/authorize.ts"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^8.2.0",
+    "dotenv": "^18.0.0",
+    "fflate": "^0.8.3",
+    "file-type": "^22.1.1",
+    "pdf-lib": "^1.17.1",
+    "pg": "^8.23.0",
+    "playwright": "^1.63.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.1",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  }
+}

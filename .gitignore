@@ -1,0 +1,37 @@
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Local environment files
+.env
+.env.*
+
+# Credentials and OAuth tokens
+secrets/
+.neon/
+client_secret*.json
+credentials*.json
+token*.json
+*-token.json
+service-account*.json
+*.pem
+*.key
+
+# Downloaded documents, cache, diagnostics, and generated archives
+.cache/
+.cache-*/
+work/
+downloads/
+artifacts/
+outputs/
+playwright-report/
+test-results/
+*.log
+
+# Local OS/editor files
+.DS_Store
+.idea/
+
+/test/
