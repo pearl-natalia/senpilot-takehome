@@ -1,6 +1,6 @@
 # UARB email agent
 
-Email `pearl.senpilot.agent@gmail.com` with a request such as:
+Email the agent with a request such as:
 
 > Please send the Other Documents for M12205.
 
