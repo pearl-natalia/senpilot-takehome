@@ -81,14 +81,20 @@ export class GmailClient {
       subject: /^re:/i.test(email.subject) ? email.subject : `Re: ${email.subject}`,
       text, messageId, inReplyTo: email.messageId,
       references: [...email.references, ...(email.messageId ? [email.messageId] : [])],
-      headers: { 'Auto-Submitted': 'auto-replied', 'X-Auto-Response-Suppress': 'All', 'X-Filing-Agent': 'senpilot-takehome' },
+      headers: { 'Auto-Submitted': 'auto-replied', 'X-Auto-Response-Suppress': 'All', 'X-Filing-Agent': 'senpilot-takehome', 'X-Filing-Job': messageId },
       attachments: attachment ? [{ path: attachment, contentType: 'application/zip' }] : [],
     }).compile().build();
     if (raw.length > 34_000_000) throw new Error('Email exceeds attachment budget');
     return raw.toString('base64url');
   }
 
-  async findReply(messageId: string) {
+  async findReply(messageId: string, threadId?: string) {
+    if (threadId) {
+      const thread = await this.request<{ messages?: { id: string; labelIds?: string[]; payload?: { headers?: { name: string; value: string }[] } }[] }>(`threads/${encodeURIComponent(threadId)}?format=metadata&metadataHeaders=X-Filing-Job&fields=messages(id,labelIds,payload/headers)`);
+      const sent = thread.messages?.find(message => message.labelIds?.includes('SENT') && message.payload?.headers?.some(header => header.name.toLowerCase() === 'x-filing-job' && header.value === messageId));
+      if (sent) return sent.id;
+    }
+    // Gmail may rewrite Message-ID; the job header above survives that rewrite.
     const result = await this.request<{ messages?: { id: string }[] }>(`messages?q=${encodeURIComponent(`in:sent rfc822msgid:${messageId.replace(/[<>]/g, '')}`)}&maxResults=1`);
     return result.messages?.[0]?.id;
   }

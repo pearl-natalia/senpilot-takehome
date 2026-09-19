@@ -10,7 +10,7 @@ The agent replies in the same thread with matter information, counts for all fiv
 
 Gmail notifications go through Pub/Sub to a private Cloud Run service. The service records messages in Neon Postgres and creates Cloud Tasks jobs. A worker extracts the request using OpenAI structured output and Zod, navigates UARB with Playwright, validates downloads, creates a ZIP, and replies through Gmail.
 
-Postgres stores job state, the Gmail history cursor, and cache metadata. File bytes live in a private Cloud Storage bucket. One browser job runs at a time; the task queue can be adjusted to allow more workers. A scheduled recovery check runs every ten minutes and renews the Gmail watch before expiry. Normal requests are triggered by Gmail push notifications.
+Postgres stores job state, the Gmail history cursor, and cache metadata. File bytes live in a private Cloud Storage bucket. One browser job runs at a time; the task queue can be adjusted to allow more workers. A scheduled recovery check runs every thirty minutes and renews the Gmail watch before expiry. Normal requests are triggered by Gmail push notifications; the recovery interval allows Neon to sleep between requests.
 
 This uses a plain TypeScript workflow: the steps are known in advance, so an agent framework was unnecessary. The LLM only extracts request fields; it cannot choose recipients, run tools, or write the reply metadata.
 
@@ -70,7 +70,7 @@ The scripts upload credentials to Secret Manager, create scoped service accounts
 - One matter and one category per email: Exhibits, Key Documents, Other Documents, Transcripts, or Recordings. Up to ten files, selected in displayed order. A document entry can contain multiple attachments.
 - A 20 MB file/ZIP budget keeps replies manageable. Invalid, non-public, and oversized files are skipped and reported. PDFs must parse; other supported files receive signature checks, not full media decoding.
 - Matter metadata and document listings are refreshed each time. Cached files can be reused for up to 24 hours; replacements with unchanged document attributes can remain stale until expiry. Storage lifecycle rules remove objects after two days; completed job records are removed after 30 days.
-- Duplicate Gmail notifications share one database job. Transient work is retried. If Gmail’s send result is uncertain, the worker searches Sent mail using a stable Message-ID and leaves unresolved delivery for review instead of blindly resending. This is not a guarantee of exactly-once email delivery.
+- Duplicate Gmail notifications share one database job. Transient work is retried. If Gmail’s send result is uncertain, the worker checks sent messages in the original thread using a unique job header, since Gmail can replace Message-ID. Unresolved delivery is left for review instead of blindly resending. This is not a guarantee of exactly-once email delivery.
 - UARB is a stateful FileMaker website, so layout changes can break navigation. Some transcript downloads have malformed headers; that specific Chrome failure falls back to the same UARB download URL and session, with redirects blocked and the same validation limits.
 
 This is an independent technical-assignment demo, not an official Senpilot or UARB service.

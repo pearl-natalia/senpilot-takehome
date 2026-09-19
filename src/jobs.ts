@@ -16,6 +16,7 @@ import { clarification, formatReply } from './gmail/reply.js';
 interface Job {
   id: string;
   gmail_message_id: string;
+  gmail_thread_id: string | null;
   status: string;
   attempts: number;
   request: FilingRequest | null;
@@ -80,7 +81,7 @@ export class JobRunner {
     };
     try {
       if (job.status === 'sending') {
-        const found = job.reply_message_id ? await this.gmail.findReply(job.reply_message_id) : undefined;
+        const found = job.reply_message_id ? await this.gmail.findReply(job.reply_message_id, job.gmail_thread_id ?? undefined) : undefined;
         if (found) {
           await update('status = $3, outgoing_message_id = $4, last_error = NULL, lease_owner = NULL, lease_expires_at = NULL', [job.reply_status ?? 'completed', found]);
         } else {

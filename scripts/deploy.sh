@@ -19,6 +19,6 @@ else
   gc pubsub subscriptions create gmail-inbox-push --topic=gmail-inbox --push-endpoint="$URL/inbox" --push-auth-service-account="$CALLER" --push-auth-token-audience="$URL" --ack-deadline=60 --min-retry-delay=10s --max-retry-delay=300s --message-retention-duration=1d
 fi
 if gc scheduler jobs describe maintain-agent --location="$REGION" >/dev/null 2>&1; then ACTION=update; else ACTION=create; fi
-gc scheduler jobs "$ACTION" http maintain-agent --location="$REGION" --schedule='*/10 * * * *' --uri="$URL/maintain" --http-method=POST --message-body='{}' --headers=Content-Type=application/json --oidc-service-account-email="$CALLER" --oidc-token-audience="$URL" --attempt-deadline=180s
+gc scheduler jobs "$ACTION" http maintain-agent --location="$REGION" --schedule='*/30 * * * *' --uri="$URL/maintain" --http-method=POST --message-body='{}' --headers=Content-Type=application/json --oidc-service-account-email="$CALLER" --oidc-token-audience="$URL" --attempt-deadline=180s
 gc scheduler jobs run maintain-agent --location="$REGION"
 echo "Deployed $URL"
